@@ -38,3 +38,10 @@ The RideShare application will be built using the following technology stack:
 - Backend: Golang
 - Frontend: Svelte
 - Database: MySQL
+
+## Installation
+### Docker
+```bash
+docker build -t rideshare-mysql .
+docker run -d -p 3306:3306 --name rideshare-mysql-container rideshare-mysql
+```
