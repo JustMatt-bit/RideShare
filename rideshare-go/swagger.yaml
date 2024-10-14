@@ -3,11 +3,593 @@ info:
   title: RideShare
   version: '1.0'
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:9090
     description: Local server
+
 paths:
-  /test:
+  /rides:
     get:
+      summary: Get all rides
+      operationId: getAllRides
       responses:
         '200':
-          description: OK
+          description: A list of rides
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ride'
+        '500':
+          description: Internal server error
+  /ride:
+    post:
+      summary: Create a new ride
+      operationId: createRide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ride'
+      responses:
+        '201':
+          description: Ride created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /ride/{id}:
+    get:
+      summary: Get ride by ID
+      operationId: getRideById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ride details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          description: Bad request
+        '404':
+          description: Ride not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update ride by ID
+      operationId: updateRideById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ride'
+      responses:
+        '200':
+          description: Ride updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ride'
+        '400':
+          description: Bad request
+        '404':
+          description: Ride not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete ride by ID
+      operationId: deleteRideById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Ride deleted
+        '400':
+          description: Bad request
+        '404':
+          description: Ride not found
+        '500':
+          description: Internal server error
+
+  /car-makes:
+    get:
+      summary: Get all car makes
+      operationId: getCarMakes
+      responses:
+        '200':
+          description: A list of car makes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarMake'
+        '500':
+          description: Internal server error
+  /car-make:
+    post:
+      summary: Create a new car make
+      operationId: createCarMake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarMake'
+      responses:
+        '201':
+          description: Car make created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarMake'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /car-makes/{make_id}:
+    get:
+      summary: Get car make by ID
+      operationId: getCarMakeById
+      parameters:
+        - name: make_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Car make details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarMake'
+        '404':
+          description: Car make not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update car make by ID
+      operationId: updateCarMakeById
+      parameters:
+        - name: make_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarMake'
+      responses:
+        '204':
+          description: Car make updated
+        '400':
+          description: Bad request
+        '404':
+          description: Car make not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete car make by ID
+      operationId: deleteCarMakeById
+      parameters:
+        - name: make_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Car make deleted
+        '404':
+          description: Car make not found
+        '500':
+          description: Internal server error
+
+  /car-categories:
+    get:
+      summary: Get all car categories
+      operationId: getCarCategories
+      responses:
+        '200':
+          description: A list of car categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarCategory'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new car category
+      operationId: createCarCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarCategory'
+      responses:
+        '201':
+          description: Car category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarCategory'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /car-categories/{category_id}:
+    get:
+      summary: Get car category by ID
+      operationId: getCarCategoryById
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Car category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarCategory'
+        '404':
+          description: Car category not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update car category by ID
+      operationId: updateCarCategoryById
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarCategory'
+      responses:
+        '204':
+          description: Car category updated
+        '400':
+          description: Bad request
+        '404':
+          description: Car category not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete car category by ID
+      operationId: deleteCarCategoryById
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Car category deleted
+        '404':
+          description: Car category not found
+        '500':
+          description: Internal server error
+
+  /car-models:
+    get:
+      summary: Get all car models
+      operationId: getCarModels
+      responses:
+        '200':
+          description: A list of car models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarModel'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create a new car model
+      operationId: createCarModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarModel'
+      responses:
+        '201':
+          description: Car model created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarModel'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /car-models/{model_id}:
+    get:
+      summary: Get car model by ID
+      operationId: getCarModelById
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Car model details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarModel'
+        '404':
+          description: Car model not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update car model by ID
+      operationId: updateCarModelById
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarModel'
+      responses:
+        '204':
+          description: Car model updated
+        '400':
+          description: Bad request
+        '404':
+          description: Car model not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete car model by ID
+      operationId: deleteCarModelById
+      parameters:
+        - name: model_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Car model deleted
+        '404':
+          description: Car model not found
+        '500':
+          description: Internal server error
+
+  /feedback:
+    get:
+      summary: Get all feedback
+      operationId: getAllFeedback
+      responses:
+        '200':
+          description: A list of feedback
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+        '500':
+          description: Internal server error
+    post:
+      summary: Create new feedback
+      operationId: createFeedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Feedback'
+      responses:
+        '201':
+          description: Feedback created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+  /feedback/{feedback_id}:
+    get:
+      summary: Get feedback by ID
+      operationId: getFeedbackById
+      parameters:
+        - name: feedback_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Feedback details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '404':
+          description: Feedback not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update feedback by ID
+      operationId: updateFeedbackById
+      parameters:
+        - name: feedback_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Feedback'
+      responses:
+        '204':
+          description: Feedback updated
+        '400':
+          description: Bad request
+        '404':
+          description: Feedback not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete feedback by ID
+      operationId: deleteFeedbackById
+      parameters:
+        - name: feedback_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Feedback deleted
+        '404':
+          description: Feedback not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    Ride:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        driverId:
+          type: integer
+        startLocation:
+          type: string
+        endLocation:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+      required:
+        - userId
+        - driverId
+        - startLocation
+        - endLocation
+        - startTime
+        - status
+
+    CarMake:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - name
+
+    CarCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - name
+
+    CarModel:
+      type: object
+      properties:
+        id:
+          type: integer
+        makeId:
+          type: integer
+        categoryId:
+          type: integer
+        name:
+          type: string
+      required:
+        - makeId
+        - categoryId
+        - name
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        rideId:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required:
+        - userId
+        - rideId
+        - rating

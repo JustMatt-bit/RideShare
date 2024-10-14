@@ -5,6 +5,7 @@ CREATE TABLE `auth_service`(
 
 CREATE TABLE `car`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `license_plate` VARCHAR(255) NOT NULL DEFAULT '',
     `user_id` BIGINT UNSIGNED NOT NULL,
     `model_id` BIGINT UNSIGNED NOT NULL,
     `year` INT NOT NULL
@@ -12,12 +13,12 @@ CREATE TABLE `car`(
 
 CREATE TABLE `car_make`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(255) NOT NULL
+    `name` VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE `car_category`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(255) NOT NULL,
+    `name` VARCHAR(255) NOT NULL UNIQUE,
     `passenger_count` INT NOT NULL
 );
 
@@ -29,9 +30,11 @@ CREATE TABLE `car_model`(
 );
 
 CREATE TABLE `ride_passenger`(
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `ride_id` BIGINT UNSIGNED NOT NULL,
-    `passenger_id` BIGINT UNSIGNED NOT NULL
+    `passenger_id` BIGINT UNSIGNED NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    PRIMARY KEY(`ride_id`, `passenger_id`)
+
 );
 
 CREATE TABLE `auth`(
@@ -54,11 +57,12 @@ CREATE TABLE `ride`(
 );
 
 CREATE TABLE `chat_message`(
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `ride_id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `message` TEXT NOT NULL,
-    `ts` DATETIME NOT NULL
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    PRIMARY KEY(`id`, `ride_id`)
 );
 
 CREATE TABLE `user`(
@@ -75,7 +79,8 @@ CREATE TABLE `user_feedback`(
     `owner_user_id` BIGINT UNSIGNED NOT NULL,
     `ride_id` BIGINT UNSIGNED NOT NULL,
     `score` INT NOT NULL,
-    `message` TEXT NOT NULL
+    `message` TEXT NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
 );
 
 -- Foreign Key Constraints
@@ -400,7 +405,7 @@ INSERT INTO `user_feedback` (`owner_user_id`, `ride_id`, `score`, `message`) VAL
 (1, 5, 3, 'It was okay.');
 
 -- Insert chat messages
-INSERT INTO `chat_message` (`ride_id`, `user_id`, `message`, `ts`) VALUES
+INSERT INTO `chat_message` (`ride_id`, `user_id`, `message`, `created_at`) VALUES
 (1, 1, 'Ready to go?', '2023-10-01 07:50:00'),
 (1, 2, 'Yes, I am.', '2023-10-01 07:51:00'),
 (2, 2, 'On my way.', '2023-10-02 08:50:00'),
