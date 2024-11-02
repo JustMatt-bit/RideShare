@@ -1,8 +1,3 @@
-CREATE TABLE `auth_service`(
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE `car`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `license_plate` VARCHAR(255) NOT NULL DEFAULT '',
@@ -38,10 +33,10 @@ CREATE TABLE `ride_passenger`(
 );
 
 CREATE TABLE `auth`(
-    `user_id` BIGINT UNSIGNED NOT NULL,
-    `service_id` BIGINT UNSIGNED NOT NULL,
     `token` VARCHAR(255) NOT NULL,
-    PRIMARY KEY(`user_id`, `service_id`)
+    `auth_service` VARCHAR(255) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY(`token`, `auth_service`)
 );
 
 CREATE TABLE `ride`(
@@ -70,6 +65,7 @@ CREATE TABLE `user`(
     `name` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
+    `role` VARCHAR(255) NOT NULL DEFAULT 'user',
     `settings` JSON NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()
 );
@@ -93,7 +89,6 @@ ALTER TABLE `auth` ADD CONSTRAINT `auth_user_id_foreign` FOREIGN KEY(`user_id`) 
 ALTER TABLE `ride_passenger` ADD CONSTRAINT `ride_passenger_ride_id_foreign` FOREIGN KEY(`ride_id`) REFERENCES `ride`(`id`);
 ALTER TABLE `car` ADD CONSTRAINT `car_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 ALTER TABLE `car` ADD CONSTRAINT `car_model_id_foreign` FOREIGN KEY(`model_id`) REFERENCES `car_model`(`id`);
-ALTER TABLE `auth` ADD CONSTRAINT `auth_service_foreign` FOREIGN KEY(`service_id`) REFERENCES `auth_service`(`id`);
 ALTER TABLE `chat_message` ADD CONSTRAINT `chat_message_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
 ALTER TABLE `car_model` ADD CONSTRAINT `car_model_category_id_foreign` FOREIGN KEY(`category_id`) REFERENCES `car_category`(`id`);
 ALTER TABLE `user_feedback` ADD CONSTRAINT `user_feedback_owner_user_id_foreign` FOREIGN KEY(`owner_user_id`) REFERENCES `user`(`id`);

@@ -8,5 +8,10 @@
     },
     "server": {
         "port": "9090"
+    },
+    "googleauth": {
+        "clientID": "YOUR_CLIENT_ID",
+        "clientSecret": "YOUR_CLIENT_SECRET",
+        "callbackURL": "http://localhost:9090/auth/google/callback"
     }
 }

@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"encoding/json"
@@ -14,25 +14,32 @@ type DBConfig struct {
 	Password string `json:"password"`
 }
 
-type config struct {
+type GoogleAuthConfig struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	CallbackURL  string `json:"callback_url"`
+}
+
+type Config struct {
 	MySQL  DBConfig `json:"db"`
 	Server struct {
 		Port string `json:"port"`
 	} `json:"server"`
+	GoogleAuth GoogleAuthConfig `json:"google_auth"`
 }
 
-func (c *DBConfig) dBConnectionString() string {
+func (c *DBConfig) DBConnectionString() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", c.Username, c.Password, c.Host, c.Port, c.Database)
 }
 
-func loadConfig(path string) (*config, error) {
+func LoadConfig(path string) (*Config, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var config config
+	var config Config
 	decoder := json.NewDecoder(file)
 	if err = decoder.Decode(&config); err != nil {
 		return nil, err

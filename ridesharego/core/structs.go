@@ -1,11 +1,17 @@
-package main
+package core
 
 import (
 	"encoding/json"
 	"errors"
+	"time"
 )
 
-type ride struct {
+type UserAuth struct {
+	Role   string
+	UserID int
+}
+
+type Ride struct {
 	ID           int    `json:"id"`
 	OwnerID      int    `json:"owner_user_id"`
 	VehicleID    int    `json:"vehicle_id"`
@@ -17,64 +23,69 @@ type ride struct {
 	CreatedAt    string `json:"created_at,omitempty"`
 }
 
-func (r *ride) validate() error {
+func (r *Ride) Validate(car *Car) error {
 	if r.OwnerID == 0 {
 		return errors.New("missing owner_user_id")
-	}
-	_, err := dbGetUserByID(r.OwnerID)
-	if err != nil {
-		return errors.New("user not found")
 	}
 
 	if r.VehicleID == 0 {
 		return errors.New("missing vehicle_id")
 	}
-	_, err = dbGetCarByID(r.VehicleID)
-	if err != nil {
-		return errors.New("car not found")
+
+	if car.UserID != r.OwnerID {
+		return errors.New("vehicle does not belong to owner")
 	}
 
 	if r.StartDate == "" {
 		return errors.New("missing start_date")
 	}
+
 	if r.StartCity == "" {
 		return errors.New("missing start_city")
 	}
+
 	if r.StartAddress == "" {
 		return errors.New("missing start_address")
 	}
+
 	if r.EndCity == "" {
 		return errors.New("missing end_city")
 	}
+
 	if r.EndAddress == "" {
 		return errors.New("missing end_address")
 	}
+
 	return nil
 }
 
-type user struct {
+type User struct {
 	ID        int             `json:"id"`
 	Name      string          `json:"name"`
 	Email     string          `json:"email"`
 	Password  string          `json:"password"`
+	Role      string          `json:"role"`
 	Settings  json.RawMessage `json:"settings"`
 	CreatedAt string          `json:"created_at,omitempty"`
 }
 
-func (u *user) validate() error {
+func (u *User) Validate() error {
 	if u.Name == "" {
 		return errors.New("missing name")
 	}
+
 	if u.Email == "" {
 		return errors.New("missing email")
 	}
+
 	if u.Password == "" {
 		return errors.New("missing password")
 	}
+
 	return nil
 }
 
-type car struct {
+type Car struct {
 	ID           int    `json:"id"`
 	UserID       int    `json:"user_id"`
 	LicensePlate string `json:"license_plate"`
@@ -82,7 +93,7 @@ type car struct {
 	ModelID      int    `json:"model_id"`
 }
 
-func (c *car) validate() error {
+func (c *Car) Validate(cars []Car) error {
 	if c.LicensePlate == "" {
 		return errors.New("missing license_plate")
 	}
@@ -90,108 +101,116 @@ func (c *car) validate() error {
 	if c.UserID == 0 {
 		return errors.New("missing user_id")
 	}
-	_, err := dbGetUserByID(c.UserID)
-	if err != nil {
-		return errors.New("user not found")
+
+	for _, car := range cars {
+		if car.LicensePlate == c.LicensePlate {
+			return errors.New("license_plate already exists")
+		}
 	}
 
 	if c.Year == 0 {
 		return errors.New("missing year")
 	}
+
 	if c.ModelID == 0 {
 		return errors.New("missing model_id")
 	}
-	_, err = dbGetCarModelByID(c.ModelID)
-	if err != nil {
-		return errors.New("model not found")
-	}
+
 	return nil
 }
 
-type carModel struct {
+type CarModel struct {
 	ID         int    `json:"id"`
 	CategoryID int    `json:"category_id"`
 	MakeID     int    `json:"make_id"`
 	Name       string `json:"name"`
 }
 
-func (cm *carModel) validate() error {
+func (cm *CarModel) Validate() error {
 	if cm.CategoryID == 0 {
 		return errors.New("missing category_id")
-	}
-	_, err := dbGetCarCategoryByID(cm.CategoryID)
-	if err != nil {
-		return errors.New("category not found")
 	}
 
 	if cm.MakeID == 0 {
 		return errors.New("missing make_id")
 	}
-	_, err = dbGetCarMakeByID(cm.MakeID)
-	if err != nil {
-		return errors.New("make not found")
-	}
 
 	if cm.Name == "" {
 		return errors.New("missing name")
 	}
+
 	return nil
 }
 
-type carMake struct {
+type CarMake struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-func (cm *carMake) validate() error {
+func (cm *CarMake) Validate() error {
 	if cm.Name == "" {
 		return errors.New("missing name")
 	}
+
 	return nil
 }
 
-type carCategory struct {
+type CarCategory struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`
 	PassengerCount int    `json:"passenger_count"`
 }
 
-func (cc *carCategory) validate() error {
+func (cc *CarCategory) Validate() error {
 	if cc.Name == "" {
 		return errors.New("missing name")
 	}
+
 	if cc.PassengerCount == 0 {
 		return errors.New("missing passenger_count")
 	}
+
 	return nil
 }
 
-type passenger struct {
+type Passenger struct {
 	RideID      int    `json:"ride_id"`
 	PassengerID int    `json:"passenger_id"`
 	CreatedAt   string `json:"created_at"`
 }
 
-func (p *passenger) validate() error {
+func (p *Passenger) Validate(ride *Ride, passengers []Passenger, passengerCount int) error {
 	if p.RideID == 0 {
 		return errors.New("missing ride_id")
 	}
-	_, err := dbGetRideByID(p.RideID)
+
+	startTime, err := time.Parse(ride.StartDate, "2006-01-02 15:04:05")
 	if err != nil {
-		return errors.New("ride not found")
+		return err
+	}
+
+	if startTime.Before(time.Now()) {
+		return errors.New("ride has already started")
+	}
+
+	for _, passenger := range passengers {
+		if passenger.PassengerID == p.PassengerID {
+			return errors.New("user is already a passenger")
+		}
+	}
+
+	if len(passengers) >= passengerCount {
+		return errors.New("ride is full")
 	}
 
 	if p.PassengerID == 0 {
 		return errors.New("missing user_id")
 	}
-	_, err = dbGetUserByID(p.PassengerID)
-	if err != nil {
-		return errors.New("user not found")
-	}
+
 	return nil
 }
 
-type feedback struct {
+type Feedback struct {
 	ID        int    `json:"id"`
 	UserID    int    `json:"user_id"`
 	RideID    int    `json:"ride_id"`
@@ -200,28 +219,44 @@ type feedback struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func (f *feedback) validate() error {
+func (f *Feedback) Validate(ride *Ride, passengers []Passenger) error {
 	if f.UserID == 0 {
 		return errors.New("missing user_id")
-	}
-	_, err := dbGetUserByID(f.UserID)
-	if err != nil {
-		return errors.New("user not found")
 	}
 
 	if f.RideID == 0 {
 		return errors.New("missing ride_id")
 	}
-	_, err = dbGetRideByID(f.RideID)
-	if err != nil {
-		return errors.New("ride not found")
+
+	if ride.OwnerID == f.UserID {
+		return errors.New("owner cannot leave feedback")
 	}
 
-	if f.Score == 0 {
-		return errors.New("missing score")
+	passengerFound := false
+	for _, passenger := range passengers {
+		if passenger.PassengerID == f.UserID {
+			passengerFound = true
+			break
+		}
 	}
+
+	if !passengerFound {
+		return errors.New("user is not a passenger")
+	}
+
+	if f.Score < 1 || f.Score > 5 {
+		return errors.New("invalid score")
+	}
+
 	if f.Message == "" {
 		return errors.New("missing message")
 	}
+
 	return nil
+}
+
+type UserAuthRecord struct {
+	UserID  int64  `json:"user_id"`
+	Service string `json:"service"`
+	Token   string `json:"token"`
 }
