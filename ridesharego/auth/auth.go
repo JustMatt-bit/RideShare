@@ -14,9 +14,14 @@ const (
 	roleUser        = "user"
 )
 
-func GetUserDetailsAndValidate(tokenString, role string) (*core.UserAuth, error) {
+var permissions = map[string]int{
+	roleAdmin: 1,
+	roleUser:  2,
+}
+
+func GetUserDetailsAndValidate(tokenString, role, secret string) (*core.UserAuth, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte("secret"), nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -28,8 +33,18 @@ func GetUserDetailsAndValidate(tokenString, role string) (*core.UserAuth, error)
 			return nil, errors.New("token expired")
 		}
 
-		if role != "" && claims["aud"] != role {
+		requiredPermission, ok := permissions[role]
+		if !ok {
 			return nil, errors.New("invalid role")
+		}
+
+		requestRole := claims["aud"].(string)
+		if requestRole == "" {
+			return nil, errors.New("invalid role")
+		}
+
+		if permissions[requestRole] > requiredPermission {
+			return nil, errors.New("insufficient role")
 		}
 
 		return &core.UserAuth{
@@ -41,7 +56,7 @@ func GetUserDetailsAndValidate(tokenString, role string) (*core.UserAuth, error)
 	return nil, errors.New("invalid token")
 }
 
-func createToken(user *core.User, issueTime time.Time) (string, error) {
+func createToken(user *core.User, issueTime time.Time, secret string) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"iss": "rideshare-go",
@@ -50,5 +65,5 @@ func createToken(user *core.User, issueTime time.Time) (string, error) {
 		"iat": issueTime.Unix(),
 	})
 
-	return claims.SignedString([]byte("secret"))
+	return claims.SignedString([]byte(secret))
 }

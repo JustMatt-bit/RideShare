@@ -17,23 +17,25 @@ func loggerMiddleware(next http.Handler) http.Handler {
 		log = log.WithFields(logrus.Fields{
 			"method": r.Method,
 			"path":   r.URL.Path,
-		}).Logger
+		})
 
 		ctx := context.WithValue(r.Context(), core.CtxLog, log)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func withMiddleware(handler func(http.ResponseWriter, *http.Request, *logrus.Logger, *sql.DB)) http.HandlerFunc {
+func withMiddleware(handler func(http.ResponseWriter, *http.Request, *logrus.Entry, *sql.DB)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := r.Context().Value(core.CtxLog).(*logrus.Logger)
-		db := r.Context().Value(core.CtxAuth).(*sql.DB)
+		log := r.Context().Value(core.CtxLog).(*logrus.Entry)
+		db := r.Context().Value(core.CtxDB).(*sql.DB)
 		handler(w, r, log, db)
 	}
 }
 
-func authMiddleware(role string, next http.Handler) http.HandlerFunc {
+func authMiddleware(secret, role string, next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log := r.Context().Value(core.CtxLog).(*logrus.Entry)
+
 		authorization := r.Header.Get("Authorization")
 		if authorization == "" {
 			http.Error(w, "missing Authorization header", http.StatusUnauthorized)
@@ -57,13 +59,14 @@ func authMiddleware(role string, next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		details, err := auth.GetUserDetailsAndValidate(token, role)
+		auth, err := auth.GetUserDetailsAndValidate(token, role, secret)
 		if err != nil {
-			http.Error(w, "invalid token", http.StatusUnauthorized)
+			log.WithError(err).Error("getting user auth")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), core.CtxAuth, details)
+		ctx := context.WithValue(r.Context(), core.CtxAuth, auth)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

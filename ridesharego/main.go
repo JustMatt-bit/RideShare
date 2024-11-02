@@ -1,20 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"main/api"
 	"main/auth"
 	"main/core"
 	"main/db"
 	"net/http"
-
-	"golang.org/x/oauth2"
 )
-
-type any interface{}
-
-var Connection *sql.DB
-var GoogleAuth oauth2.Config
 
 func main() {
 	log := core.SetupLogging()
@@ -29,11 +21,10 @@ func main() {
 		log.WithError(err).Fatal("can't initialize MySQL")
 	}
 	defer db.Close()
-	Connection = db
 
-	r := api.CreateRouter(db)
+	r := api.CreateRouter(db, config.Server.AuthSecret)
 
-	googleAuthModule := auth.NewGoogleAuthModule(config.GoogleAuth, db)
+	googleAuthModule := auth.NewGoogleAuthModule(config.GoogleAuth, db, config.Server.AuthSecret)
 	googleAuthModule.ApplyRoutes(r)
 
 	port := config.Server.Port

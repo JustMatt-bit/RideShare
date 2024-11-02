@@ -23,7 +23,8 @@ type GoogleAuthConfig struct {
 type Config struct {
 	MySQL  DBConfig `json:"db"`
 	Server struct {
-		Port string `json:"port"`
+		Port       string `json:"port"`
+		AuthSecret string `json:"auth_secret"`
 	} `json:"server"`
 	GoogleAuth GoogleAuthConfig `json:"google_auth"`
 }

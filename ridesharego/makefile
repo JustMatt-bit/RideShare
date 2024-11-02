@@ -1,4 +1,5 @@
 run:
+	docker container start rideshare-mysql-container
 	go run ./
 
 reset:

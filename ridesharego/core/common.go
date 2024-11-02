@@ -15,11 +15,11 @@ const (
 	CtxDB   CtxKey = "db"
 )
 
-func SetupLogging() *logrus.Logger {
+func SetupLogging() *logrus.Entry {
 	log := logrus.New()
 	log.SetFormatter(&logrus.TextFormatter{
 		DisableTimestamp: true,
 		ForceColors:      true,
 	})
-	return log
+	return logrus.NewEntry(log)
 }

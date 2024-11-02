@@ -80,18 +80,18 @@ CREATE TABLE `user_feedback`(
 );
 
 -- Foreign Key Constraints
-ALTER TABLE `ride` ADD CONSTRAINT `ride_owner_user_id_foreign` FOREIGN KEY(`owner_user_id`) REFERENCES `user`(`id`);
-ALTER TABLE `user_feedback` ADD CONSTRAINT `user_feedback_ride_id_foreign` FOREIGN KEY(`ride_id`) REFERENCES `ride`(`id`);
-ALTER TABLE `ride` ADD CONSTRAINT `ride_vehicle_id_foreign` FOREIGN KEY(`vehicle_id`) REFERENCES `car`(`id`);
-ALTER TABLE `ride_passenger` ADD CONSTRAINT `ride_passenger_passenger_id_foreign` FOREIGN KEY(`passenger_id`) REFERENCES `user`(`id`);
-ALTER TABLE `car_model` ADD CONSTRAINT `car_model_make_id_foreign` FOREIGN KEY(`make_id`) REFERENCES `car_make`(`id`);
-ALTER TABLE `auth` ADD CONSTRAINT `auth_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
-ALTER TABLE `ride_passenger` ADD CONSTRAINT `ride_passenger_ride_id_foreign` FOREIGN KEY(`ride_id`) REFERENCES `ride`(`id`);
-ALTER TABLE `car` ADD CONSTRAINT `car_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
-ALTER TABLE `car` ADD CONSTRAINT `car_model_id_foreign` FOREIGN KEY(`model_id`) REFERENCES `car_model`(`id`);
-ALTER TABLE `chat_message` ADD CONSTRAINT `chat_message_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`);
-ALTER TABLE `car_model` ADD CONSTRAINT `car_model_category_id_foreign` FOREIGN KEY(`category_id`) REFERENCES `car_category`(`id`);
-ALTER TABLE `user_feedback` ADD CONSTRAINT `user_feedback_owner_user_id_foreign` FOREIGN KEY(`owner_user_id`) REFERENCES `user`(`id`);
+ALTER TABLE `ride` ADD CONSTRAINT `ride_owner_user_id_foreign` FOREIGN KEY(`owner_user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
+ALTER TABLE `user_feedback` ADD CONSTRAINT `user_feedback_ride_id_foreign` FOREIGN KEY(`ride_id`) REFERENCES `ride`(`id`) ON DELETE CASCADE;
+ALTER TABLE `ride` ADD CONSTRAINT `ride_vehicle_id_foreign` FOREIGN KEY(`vehicle_id`) REFERENCES `car`(`id`) ON DELETE CASCADE;
+ALTER TABLE `ride_passenger` ADD CONSTRAINT `ride_passenger_passenger_id_foreign` FOREIGN KEY(`passenger_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
+ALTER TABLE `car_model` ADD CONSTRAINT `car_model_make_id_foreign` FOREIGN KEY(`make_id`) REFERENCES `car_make`(`id`) ON DELETE CASCADE;
+ALTER TABLE `auth` ADD CONSTRAINT `auth_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
+ALTER TABLE `ride_passenger` ADD CONSTRAINT `ride_passenger_ride_id_foreign` FOREIGN KEY(`ride_id`) REFERENCES `ride`(`id`) ON DELETE CASCADE;
+ALTER TABLE `car` ADD CONSTRAINT `car_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
+ALTER TABLE `car` ADD CONSTRAINT `car_model_id_foreign` FOREIGN KEY(`model_id`) REFERENCES `car_model`(`id`) ON DELETE CASCADE;
+ALTER TABLE `chat_message` ADD CONSTRAINT `chat_message_user_id_foreign` FOREIGN KEY(`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
+ALTER TABLE `car_model` ADD CONSTRAINT `car_model_category_id_foreign` FOREIGN KEY(`category_id`) REFERENCES `car_category`(`id`) ON DELETE CASCADE;
+ALTER TABLE `user_feedback` ADD CONSTRAINT `user_feedback_owner_user_id_foreign` FOREIGN KEY(`owner_user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE;
 
 INSERT INTO `user` (`email`, `name`, `password`, `settings`) VALUES
 ('tom@gmail.com', 'Tom Tommy', 'password1', '{}'),

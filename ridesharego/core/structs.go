@@ -184,7 +184,7 @@ func (p *Passenger) Validate(ride *Ride, passengers []Passenger, passengerCount 
 		return errors.New("missing ride_id")
 	}
 
-	startTime, err := time.Parse(ride.StartDate, "2006-01-02 15:04:05")
+	startTime, err := time.Parse("2006-01-02 15:04:05", ride.StartDate)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ type Feedback struct {
 	CreatedAt string `json:"created_at"`
 }
 
-func (f *Feedback) Validate(ride *Ride, passengers []Passenger) error {
+func (f *Feedback) Validate(ride *Ride, passengers []Passenger, role string) error {
 	if f.UserID == 0 {
 		return errors.New("missing user_id")
 	}
@@ -240,7 +240,7 @@ func (f *Feedback) Validate(ride *Ride, passengers []Passenger) error {
 		}
 	}
 
-	if !passengerFound {
+	if !passengerFound && role != RoleAdmin {
 		return errors.New("user is not a passenger")
 	}
 

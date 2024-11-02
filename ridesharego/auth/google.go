@@ -20,8 +20,9 @@ import (
 )
 
 type authModule struct {
-	db     *sql.DB
-	oauth2 oauth2.Config
+	db         *sql.DB
+	oauth2     oauth2.Config
+	authSecret string
 }
 
 var authTypeGoogle = "google"
@@ -53,7 +54,7 @@ func (u *googleUser) ToUser() core.User {
 	}
 }
 
-func NewGoogleAuthModule(googleAuthConfig core.GoogleAuthConfig, db *sql.DB) *authModule {
+func NewGoogleAuthModule(googleAuthConfig core.GoogleAuthConfig, db *sql.DB, authSecret string) *authModule {
 	m := &authModule{
 		db: db,
 		oauth2: oauth2.Config{
@@ -63,15 +64,16 @@ func NewGoogleAuthModule(googleAuthConfig core.GoogleAuthConfig, db *sql.DB) *au
 			Scopes:       []string{"openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 			Endpoint:     google.Endpoint,
 		},
+		authSecret: authSecret,
 	}
 
 	return m
 }
 
 func (m authModule) ApplyRoutes(r *mux.Router) {
-	logMiddleware := func(handler func(http.ResponseWriter, *http.Request, *logrus.Logger)) http.HandlerFunc {
+	logMiddleware := func(handler func(http.ResponseWriter, *http.Request, *logrus.Entry)) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			log := r.Context().Value(core.CtxLog).(*logrus.Logger)
+			log := r.Context().Value(core.CtxLog).(*logrus.Entry)
 			handler(w, r, log)
 		}
 	}
@@ -80,7 +82,7 @@ func (m authModule) ApplyRoutes(r *mux.Router) {
 	r.HandleFunc("/auth/google/callback", logMiddleware(m.googleAuthCallback)).Methods("GET")
 }
 
-func (m *authModule) googleAuth(w http.ResponseWriter, r *http.Request, log *logrus.Logger) {
+func (m *authModule) googleAuth(w http.ResponseWriter, r *http.Request, log *logrus.Entry) {
 	state := randToken()
 	u := m.oauth2.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	http.Redirect(w, r, u, http.StatusFound)
@@ -92,16 +94,16 @@ func randToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func (m *authModule) googleAuthCallback(w http.ResponseWriter, r *http.Request, log *logrus.Logger) {
-	data, err := m.getUserDataFromGoogle(log, r.FormValue("code"))
+func (m *authModule) googleAuthCallback(w http.ResponseWriter, r *http.Request, log *logrus.Entry) {
+	data, err := m.getUserDataFromGoogle(r.FormValue("code"))
 	if err != nil {
-		log.Error(err)
+		log.WithError(err).Error("getting user data from google")
 		return
 	}
 	fmt.Fprintf(w, "UserInfo: %s\n", data)
 }
 
-func (m *authModule) getUserDataFromGoogle(log *logrus.Logger, code string) ([]byte, error) {
+func (m *authModule) getUserDataFromGoogle(code string) ([]byte, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	v := url.Values{}
 	v.Set("code", code)
@@ -112,7 +114,6 @@ func (m *authModule) getUserDataFromGoogle(log *logrus.Logger, code string) ([]b
 
 	req, err := http.NewRequest("POST", m.oauth2.Endpoint.TokenURL, nil)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -123,7 +124,6 @@ func (m *authModule) getUserDataFromGoogle(log *logrus.Logger, code string) ([]b
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -131,26 +131,22 @@ func (m *authModule) getUserDataFromGoogle(log *logrus.Logger, code string) ([]b
 	var token googleToken
 	err = json.NewDecoder(resp.Body).Decode(&token)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
-	googleUser, err := parseGoogleIDToken(log, token.IDToken)
+	googleUser, err := parseGoogleIDToken(token.IDToken)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
 	var userID int64
-	_, err = db.GetUserAuthByToken(m.db, googleUser.ID, authTypeGoogle)
+	userAuthRecord, err := db.GetUserAuthByToken(m.db, googleUser.ID, authTypeGoogle)
 	switch {
 	case err == nil:
-		// user exists
+		userID = userAuthRecord.UserID
 	case err == sql.ErrNoRows:
-		// user does not exist
 		userID, err = db.CreateUser(m.db, googleUser.ToUser())
 		if err != nil {
-			log.Error(err)
 			return nil, err
 		}
 
@@ -162,45 +158,38 @@ func (m *authModule) getUserDataFromGoogle(log *logrus.Logger, code string) ([]b
 
 		err = db.CreateUserAuth(m.db, userAuth)
 		if err != nil {
-			log.Error(err)
 			return nil, err
 		}
 	default:
-		log.Error(err)
 		return nil, err
 	}
 
 	user, err := db.GetUserByID(m.db, userID)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
-	jwt, err := createToken(user, time.Now())
+	jwt, err := createToken(user, time.Now(), m.authSecret)
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
 	return []byte(jwt), nil
 }
 
-func parseGoogleIDToken(log *logrus.Logger, idToken string) (*googleUser, error) {
+func parseGoogleIDToken(idToken string) (*googleUser, error) {
 	parts := strings.Split(idToken, ".")
 	if len(parts) != 3 {
-		log.Error("invalid idToken")
 		return nil, fmt.Errorf("invalid idToken")
 	}
 
 	decoded, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		log.Error(err)
 		return nil, err
 	}
 
 	var claims googleClaims
 	if err := json.Unmarshal(decoded, &claims); err != nil {
-		log.Error(err)
 		return nil, err
 	}
 

@@ -7,7 +7,8 @@
         "database": "rideshare"
     },
     "server": {
-        "port": "9090"
+        "port": "9090",
+        "auth_secret": "rideshare"
     },
     "googleauth": {
         "clientID": "YOUR_CLIENT_ID",
