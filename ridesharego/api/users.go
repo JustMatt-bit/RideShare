@@ -122,7 +122,7 @@ func updateUser(w http.ResponseWriter, r *http.Request, log *logrus.Entry, d *sq
 	}
 
 	userAuth := r.Context().Value(core.CtxAuth).(*core.UserAuth)
-	if existingUser.Role != userUpdate.Role && userAuth.UserID != userUpdate.ID && userAuth.Role != core.RoleAdmin {
+	if existingUser.Role != userUpdate.Role && userAuth.UserID != existingUser.ID && userAuth.Role != core.RoleAdmin {
 		http.Error(w, "invalid permissions", http.StatusForbidden)
 		return
 	}
